@@ -1,41 +1,28 @@
 const axios = require('axios');
-const cheerio = require('cheerio');
 const { cmd } = require('../command');
 
 cmd({
-    pattern: "debugsite",
-    desc: "Check site structure safely",
+    pattern: "inspect",
+    desc: "Check Sinhalasub structure",
     category: "tools",
     filename: __filename
 },
 async(conn, mek, m, { from, q, reply }) => {
     try {
-        const url = `https://cinesubz.co/?s=Avatar`;
+        const url = `https://sinhalasub.lk/?s=Avatar`; 
         const res = await axios.get(url, { 
             headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } 
         });
 
-        const $ = cheerio.load(res.data);
-        let debugInfo = "*🔍 Site Debug Results:*\n\n";
+        // මුළු HTML එකෙන් අකුරු 30,000ක් විතරක් ගමු (Memory එක බේරගන්න)
+        const partialHtml = res.data.substring(0, 40000);
 
-        // පේජ් එකේ තියෙන පළමු ලින්ක් 5 සහ ඒවායේ classes බලමු
-        $('a').slice(0, 15).each((i, el) => {
-            const link = $(el).attr('href');
-            const parentClass = $(el).parent().attr('class') || "No Class";
-            const text = $(el).text().trim().substring(0, 20);
-
-            if (link && link.includes('/movies/')) {
-                debugInfo += `🔹 *Text:* ${text}\n`;
-                debugInfo += `🔹 *Parent Class:* ${parentClass}\n`;
-                debugInfo += `🔹 *Link:* ${link}\n\n`;
-            }
-        });
-
-        if (debugInfo === "*🔍 Site Debug Results:*\n\n") {
-            debugInfo += "කිසිදු ලින්ක් එකක් හමු වූයේ නැත. සයිට් එක බ්ලොක් කරලා ඇති.";
-        }
-
-        await reply(debugInfo);
+        await conn.sendMessage(from, { 
+            document: Buffer.from(partialHtml), 
+            fileName: 'sinhalasub_inspect.txt', 
+            mimetype: 'text/plain',
+            caption: `🔍 Sinhalasub සයිට් එකේ පේජ් එකේ මුල් කොටස මෙන්න. මේක බලලා අපි නියම Class එක අල්ලගමු.`
+        }, { quoted: mek });
 
     } catch (e) {
         reply("Error: " + e.message);
