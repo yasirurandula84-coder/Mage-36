@@ -1,6 +1,5 @@
-const config = require('../config')
-const { cmd, commands } = require('../command')
-const { runtime } = require('../lib/functions')
+const { cmd } = require('../command');
+const { runtime } = require('../lib/functions');
 
 cmd({
     pattern: "alive",
@@ -9,44 +8,49 @@ cmd({
     react: "🧬",
     filename: __filename
 },
-async(conn, mek, m, { from, quoted, reply, prefix }) => { // මෙතනට prefix එක එකතු කළා
+async(conn, mek, m, { from, reply, prefix }) => {
     try {
-        const startTime = Date.now();
-        const ping = Date.now() - startTime; 
-
-        let aliveMsg = `╭───「 *VEXTER-MD IS ALIVE* 」───⊷
+        const uptime = runtime(process.uptime());
+        
+        // පණිවිඩය වඩාත් ආකර්ෂණීය කිරීමට
+        let aliveMsg = `
+╭───「 *VEXTER-MD SYSTEM* 」───⊷
 │
-│ 👤 *User:* ${m.pushName}
-│ ⏳ *Uptime:* ${runtime(process.uptime())}
-│ ⚡ *Speed:* ${ping}ms
-│ 🧬 *Version:* 1.0.2 (Stable)
-│ 🛠️ *Prefix:* ${prefix}
+│ 🧬 *Status:* Online
+│ 👤 *Owner:* Dexter
+│ ⏳ *Runtime:* ${uptime}
+│ 🌐 *Mode:* ${config.workMode || 'Public'}
+│ 🛠️ *Prefix:* [ ${prefix} ]
+│ 📅 *Date:* ${new Date().toLocaleDateString()}
 │
 ├──────────────────────────⊷
 │
-│ *Created By Dexter*
-│ *Powered By Ranu Social Booster*
+│ *VEXTER-MD Multi-Device Bot is fully*
+│ *operational and ready to serve.*
 │
+│ _Stay connected with the future._
 ╰──────────────────────────⊷
-> *Type ${prefix}menu to see commands* 🧬`
+> *Powered By Ranu* 🧬`;
 
         await conn.sendMessage(from, { 
             image: { url: "https://i.ibb.co/nM0qZzx6/23d08aa6-1288-42a6-b705-a8b1e830487a.png" }, 
             caption: aliveMsg,
             contextInfo: {
+                mentionedJid: [m.sender],
+                forwardingScore: 999,
+                isForwarded: true,
                 externalAdReply: {
-                    title: "🧬 VEXTER-MD ONLINE",
-                    body: "Created By Dexter | Official Bot",
+                    title: "🧬 VEXTER-MD IS ACTIVE",
+                    body: "Click here for support",
                     mediaType: 1,
                     thumbnailUrl: "https://i.ibb.co/nM0qZzx6/23d08aa6-1288-42a6-b705-a8b1e830487a.png",
-                    renderLargerThumbnail: false,
                     sourceUrl: "https://wa.me/94783462955"
                 }
             }
         }, { quoted: mek });
 
     } catch (e) {
-        console.log(e)
-        reply(`${e}`)
+        console.log(e);
+        reply(`Error: ${e}`);
     }
-})
+});
