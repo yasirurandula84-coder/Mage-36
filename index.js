@@ -321,7 +321,33 @@ async function connectToWA() {
             // 2. Quality එකක් තෝරා ගැනීම
             if (global.pendingQuality && global.pendingQuality[sender]) {
                 const state = global.pendingQuality[sender];
-                if (inputNum >= 0 && inputNum < state.movie.downloadLinks.length) {
+
+                // YouTube download එකක් නම්
+        if (global.ytPendingQuality && global.ytPendingQuality[sender]) {
+            const ytState = global.ytPendingQuality[sender];
+            if (inputNum >= 0 && inputNum < ytState.qualities.length) {
+                const selectedQuality = ytState.qualities[inputNum];
+                await reply(`⬇️ Downloading in ${selectedQuality}...`);
+                
+                // ඔයාගේ ytmp4 function එක call කරනවා
+                const data = await ytmp4(ytState.video.url, {
+                    quality: selectedQuality 
+                });
+
+                if (data?.url) {
+                    await danuwa.sendMessage(from, { 
+                        video: { url: data.url }, 
+                        mimetype: "video/mp4",
+                        caption: `🎬 ${ytState.video.title} (${selectedQuality})` 
+                    }, { quoted: mek });
+                } else {
+                    reply("❌ Download failed.");
+                }
+                delete global.ytPendingQuality[sender]; // clear state
+            }
+        }
+                
+               else if (inputNum >= 0 && inputNum < state.movie.downloadLinks.length) {
                     const movieCmd = commands.find(c => c.pattern === 'movie' || (c.alias && c.alias.includes('movie')));
                     if (movieCmd) {
                         try {
