@@ -342,8 +342,10 @@ async function connectToWA() {
                 }
             }
 
-            
-                 if (inputNum >= 0 && inputNum < state.movie.downloadLinks.length) {
+            // 2. Quality එකක් තෝරා ගැනීම (Movie එකක නම්)
+            if (global.pendingQuality && global.pendingQuality[sender]) {
+                const state = global.pendingQuality[sender];
+                if (inputNum >= 0 && inputNum < state.movie.downloadLinks.length) {
                     const movieCmd = commands.find(c => c.pattern === 'movie' || (c.alias && c.alias.includes('movie')));
                     if (movieCmd) {
                         try {
