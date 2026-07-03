@@ -11,7 +11,7 @@ function convertToBool(text, fault = 'true') {
 const config = {
     // [1] General Settings
     // 🛡️ මම මෙතනින් අර වැරදි backtick ( ` ) එක අයින් කළා.
-    SESSION_ID: process.env.SESSION_ID || "VEXTER-MD;Xg4hxapb#qTpdVk3zX5lApHCb6dInecmImyUo8UmqUc82-dRpgRg", 
+    SESSION_ID: process.env.SESSION_ID || "VEXTER-MD;Kp4lXD6A#xvuB6NoZs6Bt54wdJi8_nSUCr6aS2cmpzCazYQ5oI64", 
     MONGODB_URL: process.env.MONGODB_URL || 'mongodb+srv://free62:ranu123@cluster0.rxwlzad.mongodb.net/?appName=Cluster0',
     OWNER_NUMBER: process.env.OWNER_NUMBER || '94704421963',
     
