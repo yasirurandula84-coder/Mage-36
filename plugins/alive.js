@@ -1,6 +1,6 @@
 const { cmd } = require('../command');
 const { runtime } = require('../lib/functions');
-
+const config = require('../config'); // මේ ලයින් එක අනිවාර්යයෙන්ම එකතු කරන්න
 cmd({
     pattern: "alive",
     desc: "Check if the bot is active",
