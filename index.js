@@ -192,6 +192,30 @@ async function connectToWA() {
             quotedText = (qType === 'conversation') ? qMsg.conversation : (qType === 'extendedTextMessage') ? qMsg.extendedTextMessage.text : (qMsg[qType]?.caption || "");
         }
 
+        // 1. මුලින්ම Quality Selection එක පරීක්ෂා කරන්න (මෙතන දාන්න)
+        if (global.ytPendingQuality && global.ytPendingQuality[sender] && !isCmd) {
+            const ytState = global.ytPendingQuality[sender];
+            if (!isNaN(body.trim())) {
+                const inputNum = parseInt(body.trim()) - 1;
+                if (inputNum >= 0 && inputNum < ytState.qualities.length) {
+                    const selectedQuality = ytState.qualities[inputNum];
+                    await reply(`*⬇️ Downloading ${ytState.video.title} in ${selectedQuality}...*`);
+                    
+                    const data = await ytmp4(ytState.video.url, { videoQuality: selectedQuality.replace('p', '') });
+
+                    if (data?.url) {
+                        await danuwa.sendMessage(from, { 
+                            video: { url: data.url }, 
+                            caption: `*🎬 ${ytState.video.title}*\n\n> *POWERED BY RANU* 🧬`
+                        }, { quoted: mek });
+                    }
+                    delete global.ytPendingQuality[sender];
+                    return; // මේක ගොඩක් වැදගත්!
+                }
+            }
+        }
+        
+
         // --- 🧬 AUTO COMMAND LIST GENERATOR 🧬 ---
         if (isReply && !isCmd && quotedText.toUpperCase().includes("MAIN MENU")) {
             const input = body.trim();
@@ -318,36 +342,8 @@ async function connectToWA() {
                 }
             }
 
-            // 2. Quality එකක් තෝරා ගැනීම
-            if (global.pendingQuality && global.pendingQuality[sender]) {
-                const state = global.pendingQuality[sender];
-
-                // YouTube download එකක් නම්
-        if (global.ytPendingQuality && global.ytPendingQuality[sender]) {
-            const ytState = global.ytPendingQuality[sender];
-            if (inputNum >= 0 && inputNum < ytState.qualities.length) {
-                const selectedQuality = ytState.qualities[inputNum];
-                await reply(`⬇️ Downloading in ${selectedQuality}...`);
-                
-                // ඔයාගේ ytmp4 function එක call කරනවා
-                const data = await ytmp4(ytState.video.url, {
-                    quality: selectedQuality 
-                });
-
-                if (data?.url) {
-                    await danuwa.sendMessage(from, { 
-                        video: { url: data.url }, 
-                        mimetype: "video/mp4",
-                        caption: `🎬 ${ytState.video.title} (${selectedQuality})` 
-                    }, { quoted: mek });
-                } else {
-                    reply("❌ Download failed.");
-                }
-                delete global.ytPendingQuality[sender]; // clear state
-            }
-        }
-                
-               else if (inputNum >= 0 && inputNum < state.movie.downloadLinks.length) {
+            
+                 if (inputNum >= 0 && inputNum < state.movie.downloadLinks.length) {
                     const movieCmd = commands.find(c => c.pattern === 'movie' || (c.alias && c.alias.includes('movie')));
                     if (movieCmd) {
                         try {
